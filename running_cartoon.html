@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Running & Jumping Cartoon</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #90EE90 60%, #228B22 100%);
+    height: 100vh;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+
+  /* Sky elements */
+  .sun {
+    position: absolute;
+    top: 40px; right: 120px;
+    width: 80px; height: 80px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 0 0 30px #FFD700;
+  }
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.9;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud1 { width: 100px; height: 40px; top: 80px; left: -120px; animation: cloudMove 18s linear infinite; }
+  .cloud1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+  .cloud1::after  { width: 40px; height: 40px; top: -20px; left: 45px; }
+  .cloud2 { width: 80px; height: 30px; top: 130px; left: -100px; animation: cloudMove 24s linear infinite 6s; }
+  .cloud2::before { width: 40px; height: 40px; top: -20px; left: 10px; }
+  .cloud2::after  { width: 30px; height: 30px; top: -15px; left: 38px; }
+  @keyframes cloudMove { from { left: -150px; } to { left: 110%; } }
+
+  /* Ground elements */
+  .ground-strip {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40%;
+  }
+  .grass-blade {
+    position: absolute;
+    bottom: 100%;
+    width: 4px;
+    background: #2d8a2d;
+    border-radius: 2px 2px 0 0;
+    transform-origin: bottom center;
+  }
+
+  /* Scene container */
+  .scene {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+
+  /* Character */
+  .character {
+    position: absolute;
+    bottom: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: runJump 2s ease-in-out infinite;
+  }
+
+  @keyframes runJump {
+    0%   { bottom: 40%; }
+    15%  { bottom: 40%; }
+    35%  { bottom: 58%; }
+    50%  { bottom: 40%; }
+    65%  { bottom: 40%; }
+    80%  { bottom: 40%; }
+    100% { bottom: 40%; }
+  }
+
+  /* SVG character parts */
+  .char-svg {
+    width: 80px;
+    height: 140px;
+    display: block;
+  }
+
+  /* Running legs animation */
+  .leg-left  { animation: legLeft  0.5s linear infinite; transform-origin: 40px 80px; }
+  .leg-right { animation: legRight 0.5s linear infinite; transform-origin: 40px 80px; }
+  .arm-left  { animation: armLeft  0.5s linear infinite; transform-origin: 40px 55px; }
+  .arm-right { animation: armRight 0.5s linear infinite; transform-origin: 40px 55px; }
+
+  @keyframes legLeft {
+    0%   { transform: rotate(-30deg); }
+    25%  { transform: rotate(0deg);   }
+    50%  { transform: rotate(35deg);  }
+    75%  { transform: rotate(0deg);   }
+    100% { transform: rotate(-30deg); }
+  }
+  @keyframes legRight {
+    0%   { transform: rotate(35deg);  }
+    25%  { transform: rotate(0deg);   }
+    50%  { transform: rotate(-30deg); }
+    75%  { transform: rotate(0deg);   }
+    100% { transform: rotate(35deg);  }
+  }
+  @keyframes armLeft {
+    0%   { transform: rotate(35deg);  }
+    25%  { transform: rotate(0deg);   }
+    50%  { transform: rotate(-30deg); }
+    75%  { transform: rotate(0deg);   }
+    100% { transform: rotate(35deg);  }
+  }
+  @keyframes armRight {
+    0%   { transform: rotate(-30deg); }
+    25%  { transform: rotate(0deg);   }
+    50%  { transform: rotate(35deg);  }
+    75%  { transform: rotate(0deg);   }
+    100% { transform: rotate(-30deg); }
+  }
+
+  /* Jump pose override — pause limbs mid-jump */
+  @keyframes jumpPose {
+    0%,49%  { transform: rotate(0deg);  }
+    50%,80% { transform: rotate(40deg); }
+    81%,100%{ transform: rotate(0deg);  }
+  }
+
+  /* Dust puffs */
+  .dust {
+    position: absolute;
+    bottom: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .puff {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(180,140,90,0.5);
+    animation: puff 0.5s ease-out infinite;
+  }
+  .puff:nth-child(1) { width: 16px; height: 16px; left: -30px; animation-delay: 0s;    }
+  .puff:nth-child(2) { width: 12px; height: 12px; left: -8px;  animation-delay: 0.17s; }
+  .puff:nth-child(3) { width: 10px; height: 10px; left: 10px;  animation-delay: 0.34s; }
+
+  @keyframes puff {
+    0%   { transform: translateY(0)   scale(0.3); opacity: 0.7; }
+    100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+  }
+
+  /* Score / speed label */
+  .label {
+    position: absolute;
+    top: 20px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+    letter-spacing: 2px;
+  }
+
+  /* Shadow under character */
+  .shadow {
+    position: absolute;
+    bottom: 40%;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    width: 50px; height: 12px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 50%;
+    animation: shadowPulse 2s ease-in-out infinite;
+  }
+  @keyframes shadowPulse {
+    0%,100% { transform: translateX(-50%) translateY(8px) scaleX(1);   opacity: 0.3; }
+    35%     { transform: translateX(-50%) translateY(8px) scaleX(0.4); opacity: 0.1; }
+    50%     { transform: translateX(-50%) translateY(8px) scaleX(0.3); opacity: 0.05; }
+    65%     { transform: translateX(-50%) translateY(8px) scaleX(0.5); opacity: 0.15; }
+  }
+
+  /* Scrolling ground line */
+  .ground-line {
+    position: absolute;
+    bottom: 40%;
+    left: 0; right: 0;
+    height: 4px;
+    background: #1a6b1a;
+  }
+
+  /* Scrolling objects on ground */
+  .scroll-obj {
+    position: absolute;
+    bottom: 40%;
+    animation: scroll 3s linear infinite;
+  }
+  .rock { width: 18px; height: 12px; background: #888; border-radius: 50% 50% 40% 40%; bottom: 40%; }
+  .flower-stem { width: 3px; height: 20px; background: #2d8a2d; }
+  .flower-head {
+    position: absolute;
+    top: -10px; left: -6px;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: #FF69B4;
+  }
+  .flower-head::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #FFD700;
+  }
+
+  @keyframes scroll { from { left: 110%; } to { left: -60px; } }
+  .obj1 { animation-duration: 3s;   animation-delay: 0s;   }
+  .obj2 { animation-duration: 4s;   animation-delay: 1s;   }
+  .obj3 { animation-duration: 3.5s; animation-delay: 2s;   }
+  .obj4 { animation-duration: 2.8s; animation-delay: 0.5s; }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="label">🏃 RUN &amp; JUMP!</div>
+
+  <div class="sun"></div>
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+
+  <div class="ground-strip"></div>
+  <div class="ground-line"></div>
+
+  <!-- Scrolling ground objects -->
+  <div class="scroll-obj obj1" style="bottom:40%">
+    <div class="rock"></div>
+  </div>
+  <div class="scroll-obj obj2" style="bottom:40%">
+    <div class="flower-stem"><div class="flower-head"></div></div>
+  </div>
+  <div class="scroll-obj obj3" style="bottom:40%">
+    <div class="rock" style="width:12px;height:8px;background:#aaa;"></div>
+  </div>
+  <div class="scroll-obj obj4" style="bottom:40%">
+    <div class="flower-stem" style="height:28px;"><div class="flower-head" style="background:#FF8C00;"></div></div>
+  </div>
+
+  <div class="shadow"></div>
+
+  <!-- Character SVG -->
+  <div class="character">
+    <svg class="char-svg" viewBox="0 0 80 140" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- Left arm (back) -->
+      <g class="arm-left">
+        <line x1="40" y1="58" x2="20" y2="80" stroke="#F4A460" stroke-width="7" stroke-linecap="round"/>
+        <!-- fist -->
+        <circle cx="20" cy="80" r="5" fill="#F4A460"/>
+      </g>
+
+      <!-- Left leg (back) -->
+      <g class="leg-left">
+        <!-- thigh -->
+        <line x1="40" y1="82" x2="30" y2="105" stroke="#4169E1" stroke-width="8" stroke-linecap="round"/>
+        <!-- shin -->
+        <line x1="30" y1="105" x2="22" y2="128" stroke="#4169E1" stroke-width="7" stroke-linecap="round"/>
+        <!-- shoe -->
+        <ellipse cx="18" cy="130" rx="10" ry="5" fill="#222"/>
+      </g>
+
+      <!-- Body / torso -->
+      <rect x="28" y="55" width="24" height="32" rx="8" fill="#FF6347"/>
+
+      <!-- Head -->
+      <circle cx="40" cy="38" r="20" fill="#F4A460"/>
+      <!-- Hair -->
+      <path d="M22,30 Q40,10 58,30 Q55,18 40,15 Q25,18 22,30Z" fill="#4a2800"/>
+      <!-- Eyes -->
+      <circle cx="33" cy="35" r="4" fill="white"/>
+      <circle cx="47" cy="35" r="4" fill="white"/>
+      <circle cx="34" cy="36" r="2.5" fill="#222"/>
+      <circle cx="48" cy="36" r="2.5" fill="#222"/>
+      <!-- Pupils shine -->
+      <circle cx="35" cy="35" r="1" fill="white"/>
+      <circle cx="49" cy="35" r="1" fill="white"/>
+      <!-- Smile -->
+      <path d="M33,44 Q40,50 47,44" stroke="#a0522d" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Rosy cheeks -->
+      <circle cx="28" cy="43" r="4" fill="rgba(255,100,100,0.3)"/>
+      <circle cx="52" cy="43" r="4" fill="rgba(255,100,100,0.3)"/>
+      <!-- Ear -->
+      <ellipse cx="20" cy="38" rx="5" ry="7" fill="#F4A460"/>
+      <ellipse cx="60" cy="38" rx="5" ry="7" fill="#F4A460"/>
+
+      <!-- Right leg (front) -->
+      <g class="leg-right">
+        <line x1="40" y1="82" x2="50" y2="105" stroke="#2850C8" stroke-width="8" stroke-linecap="round"/>
+        <line x1="50" y1="105" x2="58" y2="128" stroke="#2850C8" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="62" cy="130" rx="10" ry="5" fill="#111"/>
+      </g>
+
+      <!-- Right arm (front) -->
+      <g class="arm-right">
+        <line x1="40" y1="58" x2="60" y2="80" stroke="#E8956D" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="60" cy="80" r="5" fill="#E8956D"/>
+      </g>
+
+      <!-- Shorts highlight -->
+      <rect x="28" y="72" width="24" height="16" rx="4" fill="rgba(0,0,0,0.1)"/>
+    </svg>
+  </div>
+
+  <!-- Dust puffs -->
+  <div class="dust">
+    <div class="puff"></div>
+    <div class="puff"></div>
+    <div class="puff"></div>
+  </div>
+</div>
+</body>
+</html>
