@@ -154,7 +154,7 @@
     100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
   }
 
-  /* Score / speed label */
+  /* Title label */
   .label {
     position: absolute;
     top: 20px; left: 50%;
@@ -165,6 +165,99 @@
     text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
     letter-spacing: 2px;
   }
+
+  /* Scoreboard */
+  .scoreboard {
+    position: absolute;
+    top: 16px; left: 16px;
+    background: rgba(0,0,0,0.55);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    padding: 12px 20px;
+    color: #fff;
+    min-width: 140px;
+    backdrop-filter: blur(4px);
+  }
+  .scoreboard h2 {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #FFD700;
+    margin-bottom: 8px;
+  }
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4px 0;
+    font-size: 0.85rem;
+    gap: 16px;
+  }
+  .score-row .s-label { color: #adf; font-size: 0.75rem; }
+  .score-row .s-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    min-width: 48px;
+    text-align: right;
+  }
+  .score-row .s-value.jumps { color: #7fff7f; }
+
+  /* Stopwatch panel */
+  .stopwatch {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: rgba(0,0,0,0.55);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    padding: 12px 20px;
+    color: #fff;
+    min-width: 160px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+  }
+  .stopwatch h2 {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #FFD700;
+    margin-bottom: 8px;
+  }
+  .sw-display {
+    font-size: 2rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .sw-display .sw-ms {
+    font-size: 1.1rem;
+    color: #adf;
+  }
+  .sw-buttons { display: flex; gap: 8px; justify-content: center; }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  .btn:active { transform: scale(0.93); }
+  .btn-start  { background: #4CAF50; color: #fff; }
+  .btn-stop   { background: #e74c3c; color: #fff; }
+  .btn-reset  { background: rgba(255,255,255,0.2); color: #fff; }
+
+  /* Paused state — dim animation */
+  .paused .character,
+  .paused .dust,
+  .paused .shadow { animation-play-state: paused !important; }
+  .paused .character * { animation-play-state: paused !important; }
+  .paused .scroll-obj { animation-play-state: paused !important; }
+  .paused .cloud1, .paused .cloud2 { animation-play-state: paused !important; }
 
   /* Shadow under character */
   .shadow {
@@ -225,8 +318,37 @@
 </style>
 </head>
 <body>
-<div class="scene">
+<div class="scene" id="scene">
   <div class="label">🏃 RUN &amp; JUMP!</div>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <h2>Scoreboard</h2>
+    <div class="score-row">
+      <span class="s-label">Score</span>
+      <span class="s-value" id="score">0</span>
+    </div>
+    <div class="score-row">
+      <span class="s-label">Jumps</span>
+      <span class="s-value jumps" id="jumps">0</span>
+    </div>
+    <div class="score-row">
+      <span class="s-label">Best</span>
+      <span class="s-value" id="best">0</span>
+    </div>
+  </div>
+
+  <!-- Stopwatch -->
+  <div class="stopwatch">
+    <h2>Stopwatch</h2>
+    <div class="sw-display">
+      <span id="sw-mm">00</span>:<span id="sw-ss">00</span><span class="sw-ms">.<span id="sw-cs">00</span></span>
+    </div>
+    <div class="sw-buttons">
+      <button class="btn btn-start" id="btn-toggle">Start</button>
+      <button class="btn btn-reset" id="btn-reset">Reset</button>
+    </div>
+  </div>
 
   <div class="sun"></div>
   <div class="cloud cloud1"></div>
@@ -321,5 +443,116 @@
     <div class="puff"></div>
   </div>
 </div>
+
+<script>
+  const scene      = document.getElementById('scene');
+  const swMM       = document.getElementById('sw-mm');
+  const swSS       = document.getElementById('sw-ss');
+  const swCS       = document.getElementById('sw-cs');
+  const scoreEl    = document.getElementById('score');
+  const jumpsEl    = document.getElementById('jumps');
+  const bestEl     = document.getElementById('best');
+  const btnToggle  = document.getElementById('btn-toggle');
+  const btnReset   = document.getElementById('btn-reset');
+
+  let running   = false;
+  let startTime = 0;
+  let elapsed   = 0;   // ms accumulated before last pause
+  let rafId     = null;
+
+  let score     = 0;
+  let jumps     = 0;
+  let best      = 0;
+  let lastScoreTick = 0;  // timestamp of last score increment
+
+  // Jump tracking — character animation is 2s; count a jump each cycle
+  const JUMP_PERIOD = 2000;
+  let jumpCount = 0;
+  let animStart = null;
+
+  function pad(n, d = 2) { return String(n).padStart(d, '0'); }
+
+  function updateDisplay(ms) {
+    const total = Math.floor(ms);
+    const mm  = Math.floor(total / 60000);
+    const ss  = Math.floor((total % 60000) / 1000);
+    const cs  = Math.floor((total % 1000) / 10);
+    swMM.textContent = pad(mm);
+    swSS.textContent = pad(ss);
+    swCS.textContent = pad(cs);
+  }
+
+  function tick(now) {
+    if (!running) return;
+
+    const ms = elapsed + (now - startTime);
+    updateDisplay(ms);
+
+    // Score: +1 per 100 ms while running
+    if (now - lastScoreTick >= 100) {
+      const ticks = Math.floor((now - lastScoreTick) / 100);
+      score += ticks;
+      lastScoreTick += ticks * 100;
+      scoreEl.textContent = score;
+      if (score > best) { best = score; bestEl.textContent = best; }
+    }
+
+    // Jump count: one jump per JUMP_PERIOD
+    if (animStart === null) animStart = now;
+    const newJumpCount = Math.floor((now - animStart) / JUMP_PERIOD);
+    if (newJumpCount > jumpCount) {
+      const diff = newJumpCount - jumpCount;
+      jumpCount = newJumpCount;
+      jumps += diff;
+      jumpsEl.textContent = jumps;
+      // Bonus score per jump
+      score += diff * 5;
+      scoreEl.textContent = score;
+      if (score > best) { best = score; bestEl.textContent = best; }
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    running   = true;
+    startTime = performance.now();
+    lastScoreTick = startTime;
+    if (animStart === null) animStart = startTime;
+    scene.classList.remove('paused');
+    btnToggle.textContent = 'Stop';
+    btnToggle.className = 'btn btn-stop';
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running  = false;
+    elapsed += performance.now() - startTime;
+    cancelAnimationFrame(rafId);
+    scene.classList.add('paused');
+    btnToggle.textContent = 'Start';
+    btnToggle.className = 'btn btn-start';
+  }
+
+  function reset() {
+    stop();
+    elapsed    = 0;
+    score      = 0;
+    jumps      = 0;
+    jumpCount  = 0;
+    animStart  = null;
+    lastScoreTick = 0;
+    updateDisplay(0);
+    scoreEl.textContent = '0';
+    jumpsEl.textContent = '0';
+    // best persists across resets
+  }
+
+  btnToggle.addEventListener('click', () => { running ? stop() : start(); });
+  btnReset.addEventListener('click', reset);
+
+  // Start automatically on load
+  start();
+</script>
 </body>
 </html>
