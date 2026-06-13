@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mark's Pages</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #fff;
+    padding: 40px 20px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, #FFD700, #FF6347, #87CEEB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p {
+    margin-top: 8px;
+    color: #aac;
+    font-size: 0.95rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-decoration: none;
+    color: #fff;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    background: rgba(255,255,255,0.13);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+  .card .icon { font-size: 2.2rem; }
+  .card h2 { font-size: 1.1rem; font-weight: 700; }
+  .card p  { font-size: 0.82rem; color: #aac; line-height: 1.5; }
+  .card .tag {
+    align-self: flex-start;
+    background: rgba(255,215,0,0.15);
+    color: #FFD700;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    margin-top: auto;
+  }
+  footer {
+    text-align: center;
+    margin-top: 60px;
+    color: #556;
+    font-size: 0.78rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mark's Pages</h1>
+  <p>All my published HTML projects</p>
+</header>
+
+<div class="grid">
+
+  <a class="card" href="running_cartoon.html">
+    <div class="icon">🏃</div>
+    <h2>Running &amp; Jumping Cartoon</h2>
+    <p>Animated cartoon character with a scoreboard, jump counter, and stopwatch.</p>
+    <span class="tag">Animation</span>
+  </a>
+
+  <a class="card" href="game.html">
+    <div class="icon">🎮</div>
+    <h2>Game</h2>
+    <p>An interactive HTML game.</p>
+    <span class="tag">Game</span>
+  </a>
+
+</div>
+
+<footer>
+  Hosted on GitHub Pages &mdash; wiremark.github.io/marks-claude-project
+</footer>
+
+</body>
+</html>
